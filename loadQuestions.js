@@ -2,11 +2,9 @@ import { checkAnswers } from "./checkAnswers.js";
 
 let questions = [];
 
-// 🔹 Teraz ładujemy lokalny plik JSON wygenerowany parserem
-fetch('https://raw.githubusercontent.com/Kiszkah/zawodowyinfopgf08/refs/heads/master/output.json')
+fetch('https://github.com/Kiszkah/zawodowyinfopgf08/raw/refs/heads/master/output.json')
   .then(response => response.json())
   .then(data => {
-    // Możesz ograniczyć np. do 40 pytań
     questions = getRandomItemsFromArray(data, 40);
 
     console.log("[INFO] Załadowano pytania:", questions.length);
@@ -28,55 +26,50 @@ fetch('https://raw.githubusercontent.com/Kiszkah/zawodowyinfopgf08/refs/heads/ma
       questionText.classList.add('question-text');
       questionElement.appendChild(questionText);
 
-      // Dodaj tabelę (jeśli istnieje)
-      if (question.table) {
-        const table = document.createElement('div');
-        table.innerHTML = question.table;
-        questionElement.appendChild(table);
-      }
+      // Tabela odpowiedzi (już gotowa w HTML)
+      if (question.answers_table) {
+        const tableWrapper = document.createElement('div');
+        tableWrapper.innerHTML = question.answers_table;
 
-      // Dodaj odpowiedzi
-      const answers = document.createElement('div');
-      const punctuation = ['A', 'B', 'C', 'D', 'E'];
+        // Odblokowanie inputów (w JSON są "disabled")
+        const inputs = tableWrapper.querySelectorAll("input[type='radio']");
+        inputs.forEach((input, ansIndex) => {
+          input.disabled = false;
+          input.type = "checkbox"; // zamiana na checkboxy (można łatwo zaznaczać)
+          input.dataset.index = ansIndex;
+          input.dataset.qIndex = questionElement.dataset.questionIndex;
 
-      // Losowe przetasowanie odpowiedzi
-      const shuffledAnswers = getRandomItemsFromArray(question.answers, question.answers.length);
+          // zaznaczenie tylko jednej odpowiedzi w pytaniu
+          input.addEventListener('click', cbox => {
+            const box = cbox.target;
+            const questionIndex = box.dataset.qIndex;
+            const answerIndex = box.dataset.index;
 
-      shuffledAnswers.forEach((answer, ansIndex) => {
-        const item = document.createElement('li');
-        const text = document.createElement('p');
-        text.innerText = `${punctuation[ansIndex]}. ${answer.text}`;
-
-        const checkBox = document.createElement('input');
-        checkBox.dataset.index = ansIndex;
-        checkBox.dataset.qIndex = questionElement.dataset.questionIndex;
-        checkBox.type = 'checkbox';
-
-        // Można zaznaczyć tylko jedną odpowiedź w pytaniu
-        checkBox.addEventListener('click', cbox => {
-          const box = cbox.target;
-          const questionIndex = box.dataset.qIndex;
-          const answerIndex = box.dataset.index;
-
-          const questions = document.querySelectorAll(`[data-question-index]`);
-          questions.forEach(question => {
-            if (question.dataset.questionIndex === questionIndex) {
-              const answers = question.querySelectorAll('input');
-              answers.forEach(answer => {
-                if (answer.dataset.index !== answerIndex) {
-                  answer.checked = false;
-                }
-              });
-            }
+            const questions = document.querySelectorAll(`[data-question-index]`);
+            questions.forEach(question => {
+              if (question.dataset.questionIndex === questionIndex) {
+                const answers = question.querySelectorAll('input');
+                answers.forEach(answer => {
+                  if (answer.dataset.index !== answerIndex) {
+                    answer.checked = false;
+                  }
+                });
+              }
+            });
           });
         });
 
-        item.appendChild(checkBox);
-        item.appendChild(text);
-        answers.appendChild(item);
-      });
+        questionElement.appendChild(tableWrapper);
+      }
 
-      questionElement.appendChild(answers);
+      // Dodatkowa zawartość (np. obrazki)
+      if (question.additional_content && question.additional_content.length > 0) {
+        question.additional_content.forEach(extraHTML => {
+          const div = document.createElement('div');
+          div.innerHTML = extraHTML;
+          questionElement.appendChild(div);
+        });
+      }
 
       quizContainer.appendChild(questionElement);
     });
@@ -86,7 +79,6 @@ fetch('https://raw.githubusercontent.com/Kiszkah/zawodowyinfopgf08/refs/heads/ma
     checkAnswersButton.innerText = 'Sprawdź wynik';
     checkAnswersButton.onclick = checkAnswers;
     checkAnswersButton.classList.add('check-answers');
-
     quizContainer.appendChild(checkAnswersButton);
   });
 
