@@ -2,9 +2,11 @@ import { checkAnswers } from "./checkAnswers.js";
 
 let questions = [];
 
+// Ładowanie lokalnego pliku JSON
 fetch('https://github.com/Kiszkah/zawodowyinfopgf08/raw/refs/heads/master/output.json')
   .then(response => response.json())
   .then(data => {
+    // losuj 40 pytań
     questions = getRandomItemsFromArray(data, 40);
 
     console.log("[INFO] Załadowano pytania:", questions.length);
@@ -22,33 +24,33 @@ fetch('https://github.com/Kiszkah/zawodowyinfopgf08/raw/refs/heads/master/output
 
       // Tekst pytania
       const questionText = document.createElement('p');
-      questionText.innerText = `${question.question}`;
+      questionText.innerText = question.question;
       questionText.classList.add('question-text');
       questionElement.appendChild(questionText);
 
-      // Tabela odpowiedzi (już gotowa w HTML)
+      // Wstawienie tabeli odpowiedzi
       if (question.answers_table) {
         const tableWrapper = document.createElement('div');
         tableWrapper.innerHTML = question.answers_table;
 
-        // Odblokowanie inputów (w JSON są "disabled")
+        // Odblokuj inputy (oryginalnie są disabled w HTML)
         const inputs = tableWrapper.querySelectorAll("input[type='radio']");
         inputs.forEach((input, ansIndex) => {
           input.disabled = false;
-          input.type = "checkbox"; // zamiana na checkboxy (można łatwo zaznaczać)
+          input.type = "checkbox"; // zmieniamy na checkboxy
           input.dataset.index = ansIndex;
           input.dataset.qIndex = questionElement.dataset.questionIndex;
 
-          // zaznaczenie tylko jednej odpowiedzi w pytaniu
+          // tylko jedna odpowiedź na pytanie
           input.addEventListener('click', cbox => {
             const box = cbox.target;
             const questionIndex = box.dataset.qIndex;
             const answerIndex = box.dataset.index;
 
-            const questions = document.querySelectorAll(`[data-question-index]`);
-            questions.forEach(question => {
-              if (question.dataset.questionIndex === questionIndex) {
-                const answers = question.querySelectorAll('input');
+            const allQuestions = document.querySelectorAll(`[data-question-index]`);
+            allQuestions.forEach(qEl => {
+              if (qEl.dataset.questionIndex === questionIndex) {
+                const answers = qEl.querySelectorAll('input');
                 answers.forEach(answer => {
                   if (answer.dataset.index !== answerIndex) {
                     answer.checked = false;
@@ -62,7 +64,7 @@ fetch('https://github.com/Kiszkah/zawodowyinfopgf08/raw/refs/heads/master/output
         questionElement.appendChild(tableWrapper);
       }
 
-      // Dodatkowa zawartość (np. obrazki)
+      // dodatkowa zawartość (np. obrazki)
       if (question.additional_content && question.additional_content.length > 0) {
         question.additional_content.forEach(extraHTML => {
           const div = document.createElement('div');
@@ -74,7 +76,7 @@ fetch('https://github.com/Kiszkah/zawodowyinfopgf08/raw/refs/heads/master/output
       quizContainer.appendChild(questionElement);
     });
 
-    // Dodaj przycisk "Sprawdź wynik"
+    // przycisk sprawdzania wyników
     const checkAnswersButton = document.createElement('button');
     checkAnswersButton.innerText = 'Sprawdź wynik';
     checkAnswersButton.onclick = checkAnswers;
