@@ -3,7 +3,7 @@ import { checkAnswers } from "./checkAnswers.js";
 let questions = [];
 
 // 🔹 Teraz ładujemy lokalny plik JSON wygenerowany parserem
-fetch('./output.json')
+fetch('https://raw.githubusercontent.com/Kiszkah/zawodowyinfopgf08/refs/heads/master/output.json')
   .then(response => response.json())
   .then(data => {
     // Możesz ograniczyć np. do 40 pytań
